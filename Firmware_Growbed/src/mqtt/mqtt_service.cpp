@@ -41,7 +41,7 @@ void mqtt_init(){
 
 
 void mqtt_conect(){
-  while (!client.connected()) {
+  while (!client.connected() && WiFi.status() == WL_CONNECTED) {
  
     if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
  
@@ -50,7 +50,7 @@ void mqtt_conect(){
       client.subscribe(CONTROL_GROWBED);
       client.subscribe(CONTROL_ZONE);
       publishDataFormat(ALIVE_TOPIC, aliveMessage()); 
- 
+       
     } else {
  
       Serial.print("failed with state ");
@@ -59,6 +59,40 @@ void mqtt_conect(){
  
     }
   }
+}
+
+void tryBrokerReconnect(){
+  if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
+    Serial.println("Broker reconnected");
+    if(flagMessagesInArray){
+      sendMessagesInArray();
+    }
+    
+  }else{
+    Serial.print("failed with state ");
+    Serial.println(client.state());
+    
+  }
+}
+
+void sendMessagesInArray(){
+  int i = 0;
+
+  while(i < countMessagesInArray){
+
+    publishDataFormat(GROWBED_TOPIC, buildMessageStored(arrayNotSended[i][0], arrayNotSended[i][1], arrayNotSended[i][2]));
+    arrayNotSended[i][0] = 0;
+    arrayNotSended[i][1] = 0;
+    arrayNotSended[i][2] = 0;
+    i++;
+    delay(1000);
+
+  }
+  
+  sec_Ant = timeToNextRead();
+  flagMessagesInArray = false;
+  countMessagesInArray = 0;
+
 }
 
 void buildTopicsNames(){
@@ -107,20 +141,20 @@ void buildTopicsNames(){
 
 void publishInTopic(const char *topic, const char* message){
 
-    if (client.state() < 0)
+    /*if (client.state() < 0)
     {
-      mqtt_conect();
-    }
+      tryBrokerReconnect();
+    }*/
 
     client.publish(topic, message);
 }
 
 void publishDataFormat(const char *topic, String message){
 
-      if (client.state() < 0)
-      {
-      mqtt_conect();
-      }
+    /*if (client.state() < 0)
+    {
+      tryBrokerReconnect();
+    }*/
 
     char data[100];
     message.toCharArray(data, 100);
