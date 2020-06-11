@@ -25,10 +25,10 @@ char CONTROL_ZONE [60];
 char ALIVE_TOPIC [60];
 
 const char* ssid = "xx";
-const char* password =  "xx";
-const char* mqttServer = "xx";
+const char* password =  "xxx";
+const char* mqttServer = "xxx";
 //const char* mqttServer = "xx";
-const int mqttPort = 	00;
+const int mqttPort = 	xx;
 const char* mqttUser = "xx";
 const char* mqttPassword = "xx";
 

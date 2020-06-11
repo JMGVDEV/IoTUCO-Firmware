@@ -23,13 +23,13 @@ char CONTROL_GREENHOUSE [60];
 char CONTROL_GROWBED [60];
 char ALIVE_TOPIC [60];
 
-const char* ssid = "xx";
-const char* password =  "xx";
-const char* mqttServer = "xx";
+const char* ssid = "xxx";
+const char* password =  "xxx";
+const char* mqttServer = "xxx";
 //const char* mqttServer = "xx";
-const int mqttPort = 	00;
-const char* mqttUser = "xx";
-const char* mqttPassword = "xx";
+const int mqttPort = 	xxx;
+const char* mqttUser = "xxx";
+const char* mqttPassword = "xxx";
 
 const int zone = 1;
 const int greenhouse = 1;
@@ -48,8 +48,13 @@ NTPClient timeClient(ntpUDP, "south-america.pool.ntp.org", utcOffsetInSeconds);
 String dataGrowbed;
 String device_id;
 
-void setup_wifi() {
+bool flagMessagesInArray = false;
+bool flagReconnected = true;
+int countMessagesInArray = 0;
+int arrayNotSended[1024][3];
 
+void setup_wifi() {
+  
   delay(10);
   // We start by connecting to a WiFi network
   WiFi.begin(ssid, password);
@@ -73,9 +78,6 @@ void setup() {
   //Build topics names
   buildTopicsNames();
 
-  //build device_id name
-  //device_id = deviceIdName();
-
   //Connect to MQTT Broker
   mqtt_init();
  
@@ -97,16 +99,31 @@ void setup() {
 
 void loop() {
   client.loop();
-  timeClient.update();
-  sec_Act = timeClient.getSeconds();
-  if(IsTimeToRead(sec_Act)){
-    
-    dataGrowbed = ReadSensor();
-    publishDataFormat(GROWBED_TOPIC, dataGrowbed);
-    Serial.println(dataGrowbed);
 
+  //Antes de actualizar la hora desde el servidor, se verifica que exista
+  //conexión wifi para que el micro no se quede bloqueado.
+  if(WiFi.status() == WL_CONNECTED){
+    timeClient.update();
   }
 
+  sec_Act = timeClient.getSeconds();
+
+  if(IsTimeToRead(sec_Act)){
+    
+    Serial.println(WiFi.status());
+    dataGrowbed = ReadSensor();
+
+    if((WiFi.status() == WL_CONNECTED) && (client.connected())){
+      publishDataFormat(GROWBED_TOPIC, dataGrowbed);
+      Serial.println(dataGrowbed);
+    }else{
+      flagMessagesInArray = true;
+      Serial.println("problemas con la conexión WIFI");
+      addElement();
+      tryBrokerReconnect();
+    }
+
+  }
 
   if (message_arrived)
   {
@@ -115,4 +132,5 @@ void loop() {
     Serial.println("Message arrive");
     Serial.println(messageInTopic);
   }
+
 }

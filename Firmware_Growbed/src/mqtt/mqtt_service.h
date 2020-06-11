@@ -24,6 +24,8 @@ extern String controlZona;
 extern String controlInvernadero;
 extern String controlCama;
 extern String aliveTopic;
+extern bool flagMessagesInArray;
+extern int countMessagesInArray;
 
 extern char GROWBED_TOPIC [60];
 extern char CONTROL_ZONE [60];
@@ -41,5 +43,7 @@ extern void publishInTopic(const char* topic, const char* message);
 extern void publishDataFormat(const char *topic, String message);
 extern void jsonProcess(String topicMessage);
 extern void buildTopicsNames();
+extern void tryBrokerReconnect();
+extern void sendMessagesInArray();
 
 #endif
